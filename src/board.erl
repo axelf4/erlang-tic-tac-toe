@@ -26,6 +26,7 @@ winner({board, B}) ->
 			, [1, 4, 7], [2, 5, 8], [3, 6, 9] % Verticals
 			, [1, 5, 9], [3, 5, 7] % Diagonals
 			],
+	IsTie = not lists:any(fun(Sign) -> Sign == e end, B),
 	Result = lists:filtermap(fun(Line) ->
 									 [First | Rest] = lists:map(fun(N) -> lists:nth(N, B) end, Line),
 									 case lists:all(fun(Sign) -> Sign == First end, Rest) of
@@ -36,9 +37,12 @@ winner({board, B}) ->
 									 end
 							 end, Lines),
 	case Result of
+		_ when IsTie ->
+			is_tie;
 		[Winner | _] ->
 			Winner;
-		_ -> no_winner
+		_ ->
+			no_winner
 	end.
 
 to_io_list({board, B}) ->
