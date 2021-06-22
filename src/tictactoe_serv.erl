@@ -17,7 +17,7 @@ init(Socket) ->
 	gen_server:cast(self(), accept),
 	{ok, #state{socket=Socket, state=accepting, board=board:new()}}.
 
-handle_call({new_board, NewBoard}, From = {Other, _Tag}, State = #state{socket=Socket, other=Other, state=awaiting_opponent_move}) ->
+handle_call({new_board, NewBoard}, {Other, _Tag}, State = #state{socket=Socket, other=Other, state=awaiting_opponent_move}) ->
 	ok = gen_tcp:send(Socket, ["Opponent made their move. New board:\n" | board:to_io_list(NewBoard)]),
 	case board:winner(NewBoard) of
 		no_winner ->
@@ -25,13 +25,11 @@ handle_call({new_board, NewBoard}, From = {Other, _Tag}, State = #state{socket=S
 			gen_server:cast(self, do_move),
 			{reply, ok, State#state{board=NewBoard, state=querying_move}};
 		is_tie ->
-			gen_server:reply(From, ok),
 			ok = gen_tcp:send(Socket, "Tie!\n"),
-			{stop, is_tie, State#state{state=is_tie, board=NewBoard}};
+			{stop, is_tie, ok, State#state{state=is_tie, board=NewBoard}};
 		_ ->
-			gen_server:reply(From, ok),
 			ok = gen_tcp:send(Socket, "You lost!\n"),
-			{stop, have_lost, State#state{state=have_lost, board=NewBoard}}
+			{stop, have_lost, ok, State#state{state=have_lost, board=NewBoard}}
 	end;
 
 handle_call(_Request, _From, State) ->
