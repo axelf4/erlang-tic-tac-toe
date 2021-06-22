@@ -88,6 +88,10 @@ handle_info({tcp, Socket, Msg}, State = #state{socket=Socket, other=Other, state
 						  {noreply, State}
 				  end
 	end;
+handle_info({tcp_closed, Socket}, State = #state{socket=Socket}) ->
+	{stop, normal, State};
+handle_info({tcp_error, Socket, Reason}, State = #state{socket=Socket}) ->
+	{stop, Reason, State};
 
 handle_info({'DOWN', _Reference, process, _Pid, _Reason}, State = #state{socket=Socket}) ->
 	ok = gen_tcp:send(Socket, "Opponent process died\n"),
